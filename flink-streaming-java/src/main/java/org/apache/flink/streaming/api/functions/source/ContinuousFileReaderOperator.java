@@ -81,6 +81,7 @@ public class ContinuousFileReaderOperator<OUT> extends AbstractStreamOperator<OU
 	private transient List<TimestampedFileInputSplit> restoredReaderState;
 
 	public ContinuousFileReaderOperator(FileInputFormat<OUT> format) {
+		LOG.info("file: {}, format: {}", format.getFilePaths(), format);
 		this.format = checkNotNull(format);
 	}
 
@@ -303,7 +304,7 @@ public class ContinuousFileReaderOperator<OUT> extends AbstractStreamOperator<OU
 								continue;
 							}
 						}
-
+						LOG.info("CurrentSplit: {}", currentSplit);
 						if (this.format instanceof CheckpointableInputFormat && currentSplit.getSplitState() != null) {
 							// recovering after a node failure with an input
 							// format that supports resetting the offset

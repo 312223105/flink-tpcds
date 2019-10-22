@@ -23,10 +23,11 @@ import org.apache.flink.runtime.io.network.api.serialization.EventSerializer;
 import org.apache.flink.runtime.io.network.buffer.Buffer;
 import org.apache.flink.runtime.io.network.buffer.BufferConsumer;
 import org.apache.flink.util.FlinkRuntimeException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
@@ -61,7 +62,7 @@ import static org.apache.flink.util.Preconditions.checkState;
  * thread-safe vis-a-vis each other.
  */
 final class BoundedBlockingSubpartition extends ResultSubpartition {
-
+	private static final Logger LOG = LoggerFactory.getLogger(BoundedBlockingSubpartition.class);
 	/** This lock guards the creation of readers and disposal of the memory mapped file. */
 	private final Object lock = new Object();
 
@@ -136,6 +137,10 @@ final class BoundedBlockingSubpartition extends ResultSubpartition {
 		catch (IOException e) {
 			throw new FlinkRuntimeException(e.getMessage(), e);
 		}
+		if(data instanceof  FileChannelMemoryMappedBoundedData) {
+			FileChannelMemoryMappedBoundedData fileChannelData = (FileChannelMemoryMappedBoundedData) data;
+			LOG.info("flush BoundedBlockingSubpartition(index:{}) file: {} task: {}", index, fileChannelData, parent.getOwningTaskName());
+		}
 	}
 
 	private void flushCurrentBuffer() throws IOException {
@@ -149,6 +154,7 @@ final class BoundedBlockingSubpartition extends ResultSubpartition {
 		try {
 			final Buffer buffer = bufferConsumer.build();
 			try {
+				// add compress
 				data.writeBuffer(buffer);
 
 				numBuffersAndEventsWritten++;

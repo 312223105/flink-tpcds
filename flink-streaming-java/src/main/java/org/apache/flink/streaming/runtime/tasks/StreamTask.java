@@ -71,10 +71,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 
 import java.io.Closeable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -347,6 +344,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
 			}
 
 			operatorChain = new OperatorChain<>(this, recordWriters);
+			LOG.info("Task name: {}, all operator: {}", this.getName(), Arrays.toString(operatorChain.getAllOperators()));
 			headOperator = operatorChain.getHeadOperator();
 
 			// task specific initialization
@@ -358,7 +356,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
 			}
 
 			// -------- Invoke --------
-			LOG.debug("Invoking {}", getName());
+			LOG.info("Invoking {} operatorChain: {} ", getName(), operatorChain);
 
 			// open mailbox
 			mailboxProcessor.open();

@@ -180,7 +180,7 @@ public class BytesHashMap {
 			this.reusedValue.pointTo(MemorySegmentFactory.wrap(new byte[8]), 0, 8);
 			LOG.info("BytesHashMap with hashSetMode = true.");
 		} else {
-			this.valueSerializer = new BinaryRowSerializer(valueTypes.length);
+ 			this.valueSerializer = new BinaryRowSerializer(valueTypes.length);
 			this.hashSetMode = false;
 			this.reusedValue = this.valueSerializer.createInstance();
 		}

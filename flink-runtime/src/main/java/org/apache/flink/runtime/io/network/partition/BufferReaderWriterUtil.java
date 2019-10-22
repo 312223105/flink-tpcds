@@ -24,6 +24,7 @@ import org.apache.flink.runtime.io.network.buffer.Buffer;
 import org.apache.flink.runtime.io.network.buffer.BufferRecycler;
 import org.apache.flink.runtime.io.network.buffer.FreeingBufferRecycler;
 import org.apache.flink.runtime.io.network.buffer.NetworkBuffer;
+import org.xerial.snappy.Snappy;
 
 import javax.annotation.Nullable;
 
@@ -91,6 +92,48 @@ final class BufferReaderWriterUtil {
 				FreeingBufferRecycler.INSTANCE,
 				size,
 				header == HEADER_VALUE_IS_EVENT);
+	}
+
+	@Nullable
+	static Buffer sliceNextBufferWithUncompress(ByteBuffer memory, ByteBuffer compressBuf) {
+		final int remaining = memory.remaining();
+
+		// we only check the correct case where data is exhausted
+		// all other cases can only occur if our write logic is wrong and will already throw
+		// buffer underflow exceptions which will cause the read to fail.
+		if (remaining == 0) {
+			return null;
+		}
+
+		final int header = memory.getInt();
+		final int size = memory.getInt();
+
+		memory.limit(memory.position() + size);
+		ByteBuffer buf = memory.slice();
+		memory.position(memory.limit());
+		memory.limit(memory.capacity());
+		compressBuf.clear();
+		try {
+			Snappy.uncompress(buf, compressBuf);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		MemorySegment memorySegment;
+		if(compressBuf.limit() != compressBuf.capacity()) {
+			ByteBuffer tmp = ByteBuffer.allocateDirect(compressBuf.limit());
+			tmp.put(compressBuf);
+			tmp.flip();
+			memorySegment = MemorySegmentFactory.wrapOffHeapMemory(tmp);
+		} else {
+			memorySegment = MemorySegmentFactory.wrapOffHeapMemory(compressBuf);
+		}
+
+
+		return bufferFromMemorySegment(
+			memorySegment,
+			FreeingBufferRecycler.INSTANCE,
+			compressBuf.limit(),
+			header == HEADER_VALUE_IS_EVENT);
 	}
 
 	// ------------------------------------------------------------------------

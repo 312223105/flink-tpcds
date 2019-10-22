@@ -84,13 +84,14 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -275,6 +276,8 @@ public class Task implements Runnable, TaskActions, PartitionProducerStateProvid
 	 */
 	private ClassLoader userCodeClassLoader;
 
+	private static Thread mThread = null;
+	private static final AtomicBoolean firstTask = new AtomicBoolean(true);
 	/**
 	 * <p><b>IMPORTANT:</b> This constructor may not start any work that would need to
 	 * be undone in the case of a failing task deployment.</p>
@@ -527,6 +530,29 @@ public class Task implements Runnable, TaskActions, PartitionProducerStateProvid
 	@Override
 	public void run() {
 		try {
+
+			if(firstTask.compareAndSet(true, false)) {
+				System.out.println("first task " + taskNameWithSubtask);
+
+				mThread = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						try {
+						Process process = Runtime.getRuntime().exec("python /disk/1/flink-1.9-tpcds-master/bin/dstat.py -cmdtn");
+						InputStream input = process.getInputStream();
+						Scanner reader = new Scanner(input);
+						while(reader.hasNext()) {
+							System.out.println("dstat\t" + reader.nextLine());
+						}
+					} catch (IOException e) {
+//						e.printStackTrace();
+					}
+					}
+				});
+
+				mThread.start();
+
+			}
 			doRun();
 		} finally {
 			terminationFuture.complete(executionState);
@@ -702,6 +728,7 @@ public class Task implements Runnable, TaskActions, PartitionProducerStateProvid
 			executingThread.setContextClassLoader(userCodeClassLoader);
 
 			// run the invokable
+			System.out.println("start task " + this.taskNameWithSubtask);
 			invokable.invoke();
 
 			// make sure, we enter the catch block if the task leaves the invoke() method due

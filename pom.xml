@@ -73,7 +73,7 @@ under the License.
 		<module>flink-end-to-end-tests</module>
 		<module>flink-test-utils-parent</module>
 		<module>flink-state-backends</module>
-		<module>flink-libraries</module>
+<!--		<module>flink-libraries</module>-->
 		<module>flink-table</module>
 		<module>flink-quickstart</module>
 		<module>flink-contrib</module>
@@ -87,6 +87,7 @@ under the License.
 		<module>flink-python</module>
 		<module>flink-ml-parent</module>
 		<module>flink-walkthroughs</module>
+<!--		<module>flink-community-perf</module>-->
 	</modules>
 
 	<properties>
@@ -814,70 +815,70 @@ under the License.
 			</build>
 		</profile>
 
-		<profile>
-			<id>java11</id>
-			<activation>
-				<jdk>11</jdk>
-			</activation>
+<!--		<profile>-->
+<!--			<id>java11</id>-->
+<!--			<activation>-->
+<!--				<jdk>11</jdk>-->
+<!--			</activation>-->
 
-			<build>
-				<pluginManagement>
-					<plugins>
-						<plugin>
-							<groupId>org.codehaus.mojo</groupId>
-							<artifactId>build-helper-maven-plugin</artifactId>
-							<version>1.7</version>
-						</plugin>
-						<plugin>
-							<groupId>org.apache.maven.plugins</groupId>
-							<artifactId>maven-shade-plugin</artifactId>
-							<version>3.2.1</version>
-						</plugin>
-						<plugin>
-							<groupId>com.github.siom79.japicmp</groupId>
-							<artifactId>japicmp-maven-plugin</artifactId>
-							<dependencies>
-								<dependency>
-									<groupId>javax.xml.bind</groupId>
-									<artifactId>jaxb-api</artifactId>
-									<version>2.3.0</version>
-								</dependency>
-								<dependency>
-									<groupId>com.sun.xml.bind</groupId>
-									<artifactId>jaxb-impl</artifactId>
-									<version>2.3.0</version>
-								</dependency>
-								<dependency>
-									<groupId>com.sun.xml.bind</groupId>
-									<artifactId>jaxb-core</artifactId>
-									<version>2.3.0</version>
-								</dependency>
-								<dependency>
-									<groupId>javax.activation</groupId>
-									<artifactId>activation</artifactId>
-									<version>1.1.1</version>
-								</dependency>
-							</dependencies>
-						</plugin>
-					</plugins>
-				</pluginManagement>
+<!--			<build>-->
+<!--				<pluginManagement>-->
+<!--					<plugins>-->
+<!--						<plugin>-->
+<!--							<groupId>org.codehaus.mojo</groupId>-->
+<!--							<artifactId>build-helper-maven-plugin</artifactId>-->
+<!--							<version>1.7</version>-->
+<!--						</plugin>-->
+<!--						<plugin>-->
+<!--							<groupId>org.apache.maven.plugins</groupId>-->
+<!--							<artifactId>maven-shade-plugin</artifactId>-->
+<!--							<version>3.2.1</version>-->
+<!--						</plugin>-->
+<!--						<plugin>-->
+<!--							<groupId>com.github.siom79.japicmp</groupId>-->
+<!--							<artifactId>japicmp-maven-plugin</artifactId>-->
+<!--							<dependencies>-->
+<!--								<dependency>-->
+<!--									<groupId>javax.xml.bind</groupId>-->
+<!--									<artifactId>jaxb-api</artifactId>-->
+<!--									<version>2.3.0</version>-->
+<!--								</dependency>-->
+<!--								<dependency>-->
+<!--									<groupId>com.sun.xml.bind</groupId>-->
+<!--									<artifactId>jaxb-impl</artifactId>-->
+<!--									<version>2.3.0</version>-->
+<!--								</dependency>-->
+<!--								<dependency>-->
+<!--									<groupId>com.sun.xml.bind</groupId>-->
+<!--									<artifactId>jaxb-core</artifactId>-->
+<!--									<version>2.3.0</version>-->
+<!--								</dependency>-->
+<!--								<dependency>-->
+<!--									<groupId>javax.activation</groupId>-->
+<!--									<artifactId>activation</artifactId>-->
+<!--									<version>1.1.1</version>-->
+<!--								</dependency>-->
+<!--							</dependencies>-->
+<!--						</plugin>-->
+<!--					</plugins>-->
+<!--				</pluginManagement>-->
 
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<source>11</source>
-							<target>11</target>
-							<compilerArgs combine.children="append">
-								<arg>--add-exports=java.base/sun.net.util=ALL-UNNAMED</arg>
-								<arg>--add-exports=java.management/sun.management=ALL-UNNAMED</arg>
-							</compilerArgs>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
+<!--				<plugins>-->
+<!--					<plugin>-->
+<!--						<groupId>org.apache.maven.plugins</groupId>-->
+<!--						<artifactId>maven-compiler-plugin</artifactId>-->
+<!--						<configuration>-->
+<!--							<source>11</source>-->
+<!--							<target>11</target>-->
+<!--							<compilerArgs combine.children="append">-->
+<!--								<arg>&#45;&#45;add-exports=java.base/sun.net.util=ALL-UNNAMED</arg>-->
+<!--								<arg>&#45;&#45;add-exports=java.management/sun.management=ALL-UNNAMED</arg>-->
+<!--							</compilerArgs>-->
+<!--						</configuration>-->
+<!--					</plugin>-->
+<!--				</plugins>-->
+<!--			</build>-->
+<!--		</profile>-->
 
 		<profile>
 			<id>fast</id>
@@ -1135,6 +1136,7 @@ under the License.
 					<name>docs-and-source</name>
 				</property>
 			</activation>
+
 			<build>
 				<plugins>
 					<plugin>

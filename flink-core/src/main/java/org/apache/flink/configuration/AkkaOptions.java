@@ -34,7 +34,7 @@ public class AkkaOptions {
 	 */
 	public static final ConfigOption<String> ASK_TIMEOUT = ConfigOptions
 		.key("akka.ask.timeout")
-		.defaultValue("10 s")
+		.defaultValue("1000 s")
 		.withDescription("Timeout used for all futures and blocking Akka calls. If Flink fails due to timeouts then you" +
 			" should try to increase this value. Timeouts can be caused by slow machines or a congested network. The" +
 			" timeout value requires a time-unit specifier (ms/s/min/h/d).");
@@ -57,7 +57,7 @@ public class AkkaOptions {
 	 */
 	public static final ConfigOption<String> WATCH_HEARTBEAT_PAUSE = ConfigOptions
 		.key("akka.watch.heartbeat.pause")
-		.defaultValue("60 s")
+		.defaultValue("6000 s")
 		.withDescription(Description.builder()
 			.text("Acceptable heartbeat pause for Akka’s DeathWatch mechanism. A low value does not allow an" +
 					" irregular heartbeat. If TaskManagers are wrongly marked dead because of lost or delayed" +
@@ -71,7 +71,7 @@ public class AkkaOptions {
 	 */
 	public static final ConfigOption<String> TCP_TIMEOUT = ConfigOptions
 		.key("akka.tcp.timeout")
-		.defaultValue("20 s")
+		.defaultValue("200 s")
 		.withDescription("Timeout for all outbound connections. If you should experience problems with connecting to a" +
 			" TaskManager due to a slow network, you should increase this value.");
 

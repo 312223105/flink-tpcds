@@ -33,9 +33,7 @@ import java.nio.channels.FileChannel.MapMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.apache.flink.util.Preconditions.checkArgument;
@@ -238,6 +236,60 @@ final class MemoryMappedBoundedData implements BoundedData {
 			assert currentData != null;
 
 			final Buffer next = BufferReaderWriterUtil.sliceNextBuffer(currentData);
+			if (next != null) {
+				return next;
+			}
+
+			if (!furtherData.hasNext()) {
+				return null;
+			}
+
+			currentData = furtherData.next();
+			return nextBuffer();
+		}
+
+		@Override
+		public void close() throws IOException {
+			// nothing to do, this class holds no actual resources of its own,
+			// only references to the mapped byte buffers
+		}
+	}
+
+	/**
+	 * The "reader" for the memory region. It slices a sequence of buffers from the
+	 * sequence of mapped ByteBuffers.
+	 */
+	static final class CompressedBufferSlicer implements BoundedData.Reader {
+
+		/** The memory mapped region we currently read from.
+		 * Max 2GB large. Further regions may be in the {@link #furtherData} field. */
+		private ByteBuffer currentData;
+		private ByteBuffer lastAvailableBuf = null;
+		private Queue<ByteBuffer> bufs = new ArrayDeque<>(3);
+
+		/** Further byte buffers, to handle cases where there is more data than fits into
+		 * one mapped byte buffer (2GB = Integer.MAX_VALUE). */
+		private final Iterator<ByteBuffer> furtherData;
+
+		CompressedBufferSlicer(Iterable<ByteBuffer> data) {
+			this.furtherData = data.iterator();
+			this.currentData = furtherData.next();
+			for (int i = 0; i < 3; i++) {
+				bufs.add(ByteBuffer.allocateDirect(32*1024));
+			}
+
+		}
+
+		@Override
+		@Nullable
+		public Buffer nextBuffer() {
+			// should only be null once empty or disposed, in which case this method
+			// should not be called any more
+			assert currentData != null;
+			lastAvailableBuf = bufs.poll();
+			lastAvailableBuf.clear();
+			final Buffer next = BufferReaderWriterUtil.sliceNextBufferWithUncompress(currentData, lastAvailableBuf);
+			bufs.add(lastAvailableBuf);
 			if (next != null) {
 				return next;
 			}

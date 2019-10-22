@@ -63,11 +63,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
@@ -163,7 +159,8 @@ public class OperatorChain<OUT, OP extends StreamOperator<OUT>> implements Strea
 			allOps.add(headOperator);
 
 			this.allOperators = allOps.toArray(new StreamOperator<?>[allOps.size()]);
-
+			System.out.println("OperatorChain " + Arrays.toString(allOperators));
+			LOG.info("{}",Arrays.toString(allOperators));
 			success = true;
 		}
 		finally {

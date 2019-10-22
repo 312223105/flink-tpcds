@@ -18,10 +18,17 @@
 
 package org.apache.flink.runtime.io.network.partition;
 
+import org.apache.flink.core.memory.MemorySegment;
+import org.apache.flink.core.memory.MemorySegmentFactory;
 import org.apache.flink.runtime.io.network.buffer.Buffer;
+import org.apache.flink.runtime.io.network.buffer.FreeingBufferRecycler;
+import org.apache.flink.runtime.io.network.buffer.NetworkBuffer;
 import org.apache.flink.util.IOUtils;
 
 import org.apache.flink.shaded.netty4.io.netty.util.internal.PlatformDependent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xerial.snappy.Snappy;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -55,7 +62,7 @@ import static org.apache.flink.util.Preconditions.checkState;
  * segmentation faults!
  */
 final class FileChannelMemoryMappedBoundedData implements BoundedData {
-
+	private static final Logger LOG = LoggerFactory.getLogger(FileChannelMemoryMappedBoundedData.class);
 	/** The file channel backing the memory mapped file. */
 	private final FileChannel fileChannel;
 
@@ -82,6 +89,8 @@ final class FileChannelMemoryMappedBoundedData implements BoundedData {
 	/** The maximum size of each mapped region. */
 	private final long maxRegionSize;
 
+	private final ByteBuffer compressBuf = ByteBuffer.allocateDirect(32*1024);
+
 	FileChannelMemoryMappedBoundedData(
 			Path filePath,
 			FileChannel fileChannel,
@@ -93,6 +102,10 @@ final class FileChannelMemoryMappedBoundedData implements BoundedData {
 		this.memoryMappedRegions = new ArrayList<>(4);
 		this.maxRegionSize = maxSizePerMappedRegion;
 		this.endOfCurrentRegion = maxSizePerMappedRegion;
+	}
+
+	public String getPath() {
+		return filePath.toString();
 	}
 
 	@Override
@@ -110,27 +123,51 @@ final class FileChannelMemoryMappedBoundedData implements BoundedData {
 
 	private boolean tryWriteBuffer(Buffer buffer) throws IOException {
 		final long spaceLeft = endOfCurrentRegion - pos;
-		final long bytesWritten = BufferReaderWriterUtil.writeToByteChannelIfBelowSize(
-				fileChannel, buffer, headerAndBufferArray, spaceLeft);
+		// add compress to this
+		// or if spaceLeft < buffer.size switch to next buffer
 
-		if (bytesWritten >= 0) {
-			pos += bytesWritten;
-			return true;
-		}
-		else {
-			return false;
+		ByteBuffer nioBuffer = buffer.getNioBufferReadable();
+		if(nioBuffer.isDirect()) {
+			compressBuf.clear();
+			int newSize = Snappy.compress(nioBuffer, compressBuf);
+			if(spaceLeft < newSize) {
+				return false;
+			} else {
+				MemorySegment memorySegment = MemorySegmentFactory.wrapOffHeapMemory(compressBuf);
+				final Buffer newBuffer = new NetworkBuffer(memorySegment, FreeingBufferRecycler.INSTANCE, buffer.isBuffer());
+				newBuffer.setSize(compressBuf.limit());
+				final long bytesWritten = BufferReaderWriterUtil.writeToByteChannelIfBelowSize(
+					fileChannel, newBuffer, headerAndBufferArray, spaceLeft);
+				pos += bytesWritten;
+				return true;
+			}
+		} else {
+			byte[] data = new byte[nioBuffer.remaining()];
+			nioBuffer.get(data);
+			byte[] compressedData = Snappy.compress(data);
+			if(spaceLeft < compressedData.length) {
+				return false;
+			} else {
+				MemorySegment memorySegment = MemorySegmentFactory.wrap(compressedData);
+				final Buffer newBuffer = new NetworkBuffer(memorySegment, FreeingBufferRecycler.INSTANCE, buffer.isBuffer());
+				newBuffer.setSize(compressedData.length);
+				final long bytesWritten = BufferReaderWriterUtil.writeToByteChannelIfBelowSize(
+					fileChannel, newBuffer, headerAndBufferArray, spaceLeft);
+				pos += bytesWritten;
+				return true;
+			}
 		}
 	}
 
 	@Override
 	public BoundedData.Reader createReader(ResultSubpartitionView ignored) {
 		checkState(!fileChannel.isOpen());
-
+        // TOTO add compressedDataView
 		final List<ByteBuffer> buffers = memoryMappedRegions.stream()
 				.map((bb) -> bb.duplicate().order(ByteOrder.nativeOrder()))
 				.collect(Collectors.toList());
-
-		return new MemoryMappedBoundedData.BufferSlicer(buffers);
+		LOG.info("{} createReader: {}", ignored, memoryMappedRegions);
+		return new MemoryMappedBoundedData.CompressedBufferSlicer(buffers);
 	}
 
 	/**
@@ -160,7 +197,7 @@ final class FileChannelMemoryMappedBoundedData implements BoundedData {
 		// deleting the file until it is unmapped.
 		// See also https://stackoverflow.com/questions/11099295/file-flag-delete-on-close-and-memory-mapped-files/51649618#51649618
 
-		Files.delete(filePath);
+//		Files.delete(filePath);
 	}
 
 	@Override

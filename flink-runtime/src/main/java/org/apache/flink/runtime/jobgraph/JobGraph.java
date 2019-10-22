@@ -28,6 +28,8 @@ import org.apache.flink.runtime.blob.PermanentBlobKey;
 import org.apache.flink.runtime.jobgraph.tasks.JobCheckpointingSettings;
 import org.apache.flink.util.InstantiationUtil;
 import org.apache.flink.util.SerializedValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -56,7 +58,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * define the characteristics of the concrete operation and intermediate data.
  */
 public class JobGraph implements Serializable {
-
+	private static final Logger LOG = LoggerFactory.getLogger(JobGraph.class);
 	private static final long serialVersionUID = 1L;
 
 	// --- job and configuration ---
@@ -395,6 +397,7 @@ public class JobGraph implements Serializable {
 		for (JobVertex vertex : taskVertices.values()) {
 			maxParallelism = Math.max(vertex.getParallelism(), maxParallelism);
 		}
+		LOG.info("jobName:{} maximumParallelism:{}", this.jobName, maxParallelism);
 		return maxParallelism;
 	}
 

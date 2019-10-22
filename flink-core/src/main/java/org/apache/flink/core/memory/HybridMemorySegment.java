@@ -28,6 +28,7 @@ import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ReadOnlyBufferException;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * This class represents a piece of memory managed by Flink. The memory can be on-heap or off-heap,
