@@ -18,6 +18,8 @@
 
 package org.apache.flink.runtime.io.network.partition;
 
+import net.jpountz.lz4.LZ4Factory;
+import net.jpountz.lz4.LZ4SafeDecompressor;
 import org.apache.flink.core.memory.MemorySegment;
 import org.apache.flink.core.memory.MemorySegmentFactory;
 import org.apache.flink.runtime.io.network.buffer.Buffer;
@@ -94,6 +96,7 @@ final class BufferReaderWriterUtil {
 				header == HEADER_VALUE_IS_EVENT);
 	}
 
+	static private final LZ4SafeDecompressor lz4Compressor = LZ4Factory.fastestInstance().safeDecompressor();
 	@Nullable
 	static Buffer sliceNextBufferWithUncompress(ByteBuffer memory, ByteBuffer compressBuf) {
 		final int remaining = memory.remaining();
@@ -113,20 +116,22 @@ final class BufferReaderWriterUtil {
 		memory.position(memory.limit());
 		memory.limit(memory.capacity());
 		compressBuf.clear();
-		try {
-			Snappy.uncompress(buf, compressBuf);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+//		try {
+//			Snappy.uncompress(buf, compressBuf);
+			lz4Compressor.decompress(buf, compressBuf);
+			compressBuf.flip();
+//		} catch (Exception e) {
+//			throw new RuntimeException(e);
+//		}
 		MemorySegment memorySegment;
-		if(compressBuf.limit() != compressBuf.capacity()) {
-			ByteBuffer tmp = ByteBuffer.allocateDirect(compressBuf.limit());
-			tmp.put(compressBuf);
-			tmp.flip();
-			memorySegment = MemorySegmentFactory.wrapOffHeapMemory(tmp);
-		} else {
+//		if(compressBuf.limit() != compressBuf.capacity()) {
+//			ByteBuffer tmp = ByteBuffer.allocateDirect(compressBuf.limit());
+//			tmp.put(compressBuf);
+//			tmp.flip();
+//			memorySegment = MemorySegmentFactory.wrapOffHeapMemory(tmp);
+//		} else {
 			memorySegment = MemorySegmentFactory.wrapOffHeapMemory(compressBuf);
-		}
+//		}
 
 
 		return bufferFromMemorySegment(

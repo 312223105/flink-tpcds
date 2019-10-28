@@ -18,6 +18,7 @@
 
 package org.apache.flink.runtime.io.network.partition;
 
+import net.jpountz.lz4.LZ4Factory;
 import org.apache.flink.core.memory.MemorySegment;
 import org.apache.flink.core.memory.MemorySegmentFactory;
 import org.apache.flink.runtime.io.network.buffer.Buffer;
@@ -26,6 +27,7 @@ import org.apache.flink.runtime.io.network.buffer.NetworkBuffer;
 import org.apache.flink.util.IOUtils;
 
 import org.apache.flink.shaded.netty4.io.netty.util.internal.PlatformDependent;
+import net.jpountz.lz4.LZ4Compressor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xerial.snappy.Snappy;
@@ -90,6 +92,7 @@ final class FileChannelMemoryMappedBoundedData implements BoundedData {
 	private final long maxRegionSize;
 
 	private final ByteBuffer compressBuf = ByteBuffer.allocateDirect(32*1024);
+	private final LZ4Compressor lz4Compressor = LZ4Factory.fastestInstance().fastCompressor();
 
 	FileChannelMemoryMappedBoundedData(
 			Path filePath,
@@ -129,8 +132,10 @@ final class FileChannelMemoryMappedBoundedData implements BoundedData {
 		ByteBuffer nioBuffer = buffer.getNioBufferReadable();
 		if(nioBuffer.isDirect()) {
 			compressBuf.clear();
-			int newSize = Snappy.compress(nioBuffer, compressBuf);
-			if(spaceLeft < newSize) {
+			lz4Compressor.compress(nioBuffer, compressBuf);
+			compressBuf.flip();
+//			int newSize = Snappy.compress(nioBuffer, compressBuf);
+			if(spaceLeft < compressBuf.limit()) {
 				return false;
 			} else {
 				MemorySegment memorySegment = MemorySegmentFactory.wrapOffHeapMemory(compressBuf);
@@ -144,7 +149,7 @@ final class FileChannelMemoryMappedBoundedData implements BoundedData {
 		} else {
 			byte[] data = new byte[nioBuffer.remaining()];
 			nioBuffer.get(data);
-			byte[] compressedData = Snappy.compress(data);
+			byte[] compressedData = lz4Compressor.compress(data);
 			if(spaceLeft < compressedData.length) {
 				return false;
 			} else {
@@ -197,7 +202,7 @@ final class FileChannelMemoryMappedBoundedData implements BoundedData {
 		// deleting the file until it is unmapped.
 		// See also https://stackoverflow.com/questions/11099295/file-flag-delete-on-close-and-memory-mapped-files/51649618#51649618
 
-//		Files.delete(filePath);
+		Files.delete(filePath);
 	}
 
 	@Override
