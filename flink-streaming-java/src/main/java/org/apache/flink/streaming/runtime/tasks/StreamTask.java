@@ -23,6 +23,9 @@ import org.apache.flink.api.common.accumulators.Accumulator;
 import org.apache.flink.configuration.TaskManagerOptions;
 import org.apache.flink.core.fs.CloseableRegistry;
 import org.apache.flink.core.fs.FileSystemSafetyNet;
+import org.apache.flink.metrics.MeterView;
+import org.apache.flink.metrics.Metric;
+import org.apache.flink.metrics.SimpleCounter;
 import org.apache.flink.runtime.checkpoint.CheckpointMetaData;
 import org.apache.flink.runtime.checkpoint.CheckpointMetrics;
 import org.apache.flink.runtime.checkpoint.CheckpointOptions;
@@ -35,6 +38,7 @@ import org.apache.flink.runtime.io.network.api.writer.RecordWriterBuilder;
 import org.apache.flink.runtime.io.network.api.writer.ResultPartitionWriter;
 import org.apache.flink.runtime.jobgraph.OperatorID;
 import org.apache.flink.runtime.jobgraph.tasks.AbstractInvokable;
+import org.apache.flink.runtime.metrics.groups.OperatorMetricGroup;
 import org.apache.flink.runtime.plugable.SerializationDelegate;
 import org.apache.flink.runtime.state.CheckpointStorageWorkerView;
 import org.apache.flink.runtime.state.CheckpointStreamFactory;
@@ -193,6 +197,8 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
 
 	protected final MailboxProcessor mailboxProcessor;
 
+	private long startT;
+	private long endT;
 	// ------------------------------------------------------------------------
 
 	/**
@@ -513,6 +519,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
 	 * (see {@link #closeAllOperators()}.
 	 */
 	private void openAllOperators() throws Exception {
+		startT = System.currentTimeMillis();
 		for (StreamOperator<?> operator : operatorChain.getAllOperators()) {
 			if (operator != null) {
 				operator.open();
@@ -529,13 +536,50 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
 	private void closeAllOperators() throws Exception {
 		// We need to close them first to last, since upstream operators in the chain might emit
 		// elements in their close methods.
+		endT = System.currentTimeMillis();
 		StreamOperator<?>[] allOperators = operatorChain.getAllOperators();
+		StringBuffer sb = new StringBuffer(1024);
+		sb.append("\nMetricInfo - elapsed " + (endT - startT) + " ms start_time: " + startT + "$$");
 		for (int i = allOperators.length - 1; i >= 0; i--) {
 			StreamOperator<?> operator = allOperators[i];
 			if (operator != null) {
+				if(operator.getMetricGroup() instanceof OperatorMetricGroup) {
+					OperatorMetricGroup mg = (OperatorMetricGroup)operator.getMetricGroup();
+					String jobName = mg.getAllVariables().get("<job_name>");
+					String taskName = mg.getAllVariables().get("<task_name>");
+					taskName = taskName.substring(0, Math.min(40, taskName.length()));
+					String index = mg.getAllVariables().get("<subtask_index>");
+					String opName = mg.getAllVariables().get("<operator_name>");
+
+
+					sb.append(jobName)
+						.append("-").append(opName)
+						.append("-").append(taskName)
+						.append("-").append(index)
+						.append("$$");
+
+					for(Map.Entry<String, Metric> entry : mg.getMetrics().entrySet()) {
+
+						if(entry.getValue() instanceof SimpleCounter) {
+							sb.append(entry.getKey()).append(" : ");
+							SimpleCounter sc = (SimpleCounter)entry.getValue();
+							sb.append(String.valueOf(sc.getCount()));
+							sb.append("$$");
+						} else if(entry.getValue() instanceof MeterView) {
+							sb.append(entry.getKey()).append(" : ");
+							MeterView mv = (MeterView)entry.getValue();
+							sb.append(String.valueOf(mv.getCount()));
+							sb.append("$$");
+						}
+
+
+					}
+
+				}
 				operator.close();
 			}
 		}
+		System.out.println(sb.toString());
 	}
 
 	/**

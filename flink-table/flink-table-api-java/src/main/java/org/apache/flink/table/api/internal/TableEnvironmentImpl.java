@@ -298,6 +298,7 @@ public class TableEnvironmentImpl implements TableEnvironment {
 
 	@Override
 	public Table sqlQuery(String query) {
+		System.out.println("start sql query: \n" + query + "\n");
 		LOG.info("sqlQuery: {}", query);
 		List<Operation> operations = planner.parse(query);
 

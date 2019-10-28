@@ -245,6 +245,7 @@ public class ContinuousFileMonitoringFunction<OUT>
 			long modificationTime = splits.getKey();
 			for (TimestampedFileInputSplit split: splits.getValue()) {
 				LOG.info("Forwarding split: " + split);
+				System.out.println("Forwarding split: " + split);
 				context.collect(split);
 			}
 			// update the global modification time

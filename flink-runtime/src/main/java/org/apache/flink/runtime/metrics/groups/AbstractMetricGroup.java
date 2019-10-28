@@ -100,6 +100,10 @@ public abstract class AbstractMetricGroup<A extends AbstractMetricGroup<?>> impl
 	/** Flag indicating whether this group has been closed. */
 	private volatile boolean closed;
 
+	public Map<String, Metric> getMetrics() {
+		return metrics;
+	}
+
 	// ------------------------------------------------------------------------
 
 	public AbstractMetricGroup(MetricRegistry registry, String[] scope, A parent) {

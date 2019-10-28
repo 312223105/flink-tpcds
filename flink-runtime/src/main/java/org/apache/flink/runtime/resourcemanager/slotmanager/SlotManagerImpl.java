@@ -767,6 +767,10 @@ public class SlotManagerImpl implements SlotManager {
 				// request can not be fulfilled by any free slot or pending slot that can be allocated,
 				// check whether it can be fulfilled by allocated slots
 				if (failUnfulfillableRequest && !isFulfillableByRegisteredSlots(pendingSlotRequest.getResourceProfile())) {
+					System.out.println("UnfulfillableSlotRequest freeSlots.size:" + freeSlots.size());
+					for(TaskManagerSlot slot : freeSlots.values()) {
+						System.out.println("UnfulfillableSlotRequest " + slot.getResourceProfile());
+					}
 					throw new UnfulfillableSlotRequestException(pendingSlotRequest.getAllocationId(), pendingSlotRequest.getResourceProfile());
 				}
 			}

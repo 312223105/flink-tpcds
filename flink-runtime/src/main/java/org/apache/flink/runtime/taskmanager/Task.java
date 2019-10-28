@@ -728,8 +728,20 @@ public class Task implements Runnable, TaskActions, PartitionProducerStateProvid
 			executingThread.setContextClassLoader(userCodeClassLoader);
 
 			// run the invokable
-			System.out.println("start task " + this.taskNameWithSubtask);
+			long startT = System.currentTimeMillis();
+			String[] components = taskNameWithSubtask.split(",");
+			String tmpTaskName = "";
+			if(components.length > 2) {
+				tmpTaskName += components[0];
+				tmpTaskName += components[components.length - 1];
+			} else {
+				tmpTaskName = taskNameWithSubtask;
+			}
+			System.out.println(String.format("%14d ", startT) + "start task " + tmpTaskName);
 			invokable.invoke();
+			long endT = System.currentTimeMillis();
+			System.out.println(String.format("%14d ", endT) + "end task " +
+				tmpTaskName + String.format(" elasped %d ms", (endT - startT)));
 
 			// make sure, we enter the catch block if the task leaves the invoke() method due
 			// to the fact that it has been canceled

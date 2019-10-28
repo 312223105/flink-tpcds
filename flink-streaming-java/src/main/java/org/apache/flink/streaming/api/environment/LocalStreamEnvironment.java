@@ -92,7 +92,8 @@ public class LocalStreamEnvironment extends StreamExecutionEnvironment {
 
 		// add (and override) the settings with what the user defined
 		configuration.addAll(this.configuration);
-
+//		configuration.setString("metrics.reporter.slf4j.class", "org.apache.flink.metrics.slf4j.Slf4jReporter");
+//		configuration.setString("metrics.reporter.slf4j.interval", "10 SECONDS");
 		if (!configuration.contains(RestOptions.BIND_PORT)) {
 			configuration.setString(RestOptions.BIND_PORT, "0");
 		}
