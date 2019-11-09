@@ -393,14 +393,14 @@ public class VectorizedColumnReader {
 		ValuesReader dlReader = this.defColumn;
 		try {
 			byte[] bytes = page.getBytes().toByteArray();
-			LOG.debug("page size " + bytes.length + " bytes and " + pageValueCount + " records");
+			LOG.debug("page size {} bytes and {} records", bytes.length ,pageValueCount);
 			LOG.debug("reading repetition levels at 0");
 			rlReader.initFromPage(pageValueCount, bytes, 0);
 			int next = rlReader.getNextOffset();
-			LOG.debug("reading definition levels at " + next);
+			LOG.debug("reading definition levels at {}", next);
 			dlReader.initFromPage(pageValueCount, bytes, next);
 			next = dlReader.getNextOffset();
-			LOG.debug("reading data at " + next);
+			LOG.debug("reading data at {}", next);
 			initDataReader(page.getValueEncoding(), bytes, next);
 		} catch (IOException e) {
 			throw new ParquetDecodingException("could not read page " + page + " in col " + descriptor, e);
