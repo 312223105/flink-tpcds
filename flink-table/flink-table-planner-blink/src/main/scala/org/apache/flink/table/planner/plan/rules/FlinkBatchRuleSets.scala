@@ -38,11 +38,12 @@ object FlinkBatchRuleSets {
     FlinkSubQueryRemoveRule.FILTER,
     JoinConditionTypeCoerceRule.INSTANCE,
     FlinkJoinPushExpressionsRule.INSTANCE
+//    , FlinkMultiJoinProjectTransposeRule.MULTI_BOTH_PROJECT
   )
 
   /**
-    * Convert sub-queries before query decorrelation.
-    */
+   * Convert sub-queries before query decorrelation.
+   */
   val TABLE_SUBQUERY_RULES: RuleSet = RuleSets.ofList(
     SubQueryRemoveRule.FILTER,
     SubQueryRemoveRule.PROJECT,
@@ -50,9 +51,9 @@ object FlinkBatchRuleSets {
   )
 
   /**
-    * Expand plan by replacing references to tables into a proper plan sub trees. Those rules
-    * can create new plan nodes.
-    */
+   * Expand plan by replacing references to tables into a proper plan sub trees. Those rules
+   * can create new plan nodes.
+   */
   val EXPAND_PLAN_RULES: RuleSet = RuleSets.ofList(
     LogicalCorrelateToJoinFromTemporalTableRule.WITH_FILTER,
     LogicalCorrelateToJoinFromTemporalTableRule.WITHOUT_FILTER,
@@ -62,16 +63,16 @@ object FlinkBatchRuleSets {
     EnumerableToLogicalTableScan.INSTANCE)
 
   /**
-    * Convert table references before query decorrelation.
-    */
+   * Convert table references before query decorrelation.
+   */
   val TABLE_REF_RULES: RuleSet = RuleSets.ofList(
     TableScanRule.INSTANCE,
     EnumerableToLogicalTableScan.INSTANCE
   )
 
   /**
-    * RuleSet to reduce expressions
-    */
+   * RuleSet to reduce expressions
+   */
   private val REDUCE_EXPRESSION_RULES: RuleSet = RuleSets.ofList(
     ReduceExpressionsRule.FILTER_INSTANCE,
     ReduceExpressionsRule.PROJECT_INSTANCE,
@@ -80,8 +81,8 @@ object FlinkBatchRuleSets {
   )
 
   /**
-    * RuleSet to rewrite coalesce to case when
-    */
+   * RuleSet to rewrite coalesce to case when
+   */
   private val REWRITE_COALESCE_RULES: RuleSet = RuleSets.ofList(
     // rewrite coalesce to case when
     RewriteCoalesceRule.FILTER_INSTANCE,
@@ -91,8 +92,8 @@ object FlinkBatchRuleSets {
   )
 
   /**
-    * RuleSet to simplify predicate expressions in filters and joins
-    */
+   * RuleSet to simplify predicate expressions in filters and joins
+   */
   private val PREDICATE_SIMPLIFY_EXPRESSION_RULES: RuleSet = RuleSets.ofList(
     SimplifyFilterConditionRule.INSTANCE,
     SimplifyJoinConditionRule.INSTANCE,
@@ -101,8 +102,8 @@ object FlinkBatchRuleSets {
   )
 
   /**
-    * RuleSet to normalize plans for batch
-    */
+   * RuleSet to normalize plans for batch
+   */
   val DEFAULT_REWRITE_RULES: RuleSet = RuleSets.ofList((
     PREDICATE_SIMPLIFY_EXPRESSION_RULES.asScala ++
       REWRITE_COALESCE_RULES.asScala ++
@@ -126,8 +127,8 @@ object FlinkBatchRuleSets {
       )).asJava)
 
   /**
-    * RuleSet about filter
-    */
+   * RuleSet about filter
+   */
   private val FILTER_RULES: RuleSet = RuleSets.ofList(
     // push a filter into a join
     FlinkFilterJoinRule.FILTER_ON_JOIN,
@@ -147,8 +148,8 @@ object FlinkBatchRuleSets {
   )
 
   /**
-    * RuleSet to do predicate pushdown
-    */
+   * RuleSet to do predicate pushdown
+   */
   val FILTER_PREPARE_RULES: RuleSet = RuleSets.ofList((
     FILTER_RULES.asScala
       // simplify predicate expressions in filters and joins
@@ -159,8 +160,8 @@ object FlinkBatchRuleSets {
   )
 
   /**
-    * RuleSet to do push predicate/partition into table scan
-    */
+   * RuleSet to do push predicate/partition into table scan
+   */
   val FILTER_TABLESCAN_PUSHDOWN_RULES: RuleSet = RuleSets.ofList(
     // push a filter down into the table scan
     PushFilterIntoTableSourceScanRule.INSTANCE,
@@ -169,8 +170,8 @@ object FlinkBatchRuleSets {
   )
 
   /**
-    * RuleSet to prune empty results rules
-    */
+   * RuleSet to prune empty results rules
+   */
   val PRUNE_EMPTY_RULES: RuleSet = RuleSets.ofList(
     PruneEmptyRules.AGGREGATE_INSTANCE,
     PruneEmptyRules.FILTER_INSTANCE,
@@ -182,8 +183,8 @@ object FlinkBatchRuleSets {
   )
 
   /**
-    * RuleSet about project
-    */
+   * RuleSet about project
+   */
   val PROJECT_RULES: RuleSet = RuleSets.ofList(
     // push a projection past a filter
     ProjectFilterTransposeRule.INSTANCE,
@@ -238,9 +239,9 @@ object FlinkBatchRuleSets {
   )
 
   /**
-    * RuleSet to do logical optimize.
-    * This RuleSet is a sub-set of [[LOGICAL_OPT_RULES]].
-    */
+   * RuleSet to do logical optimize.
+   * This RuleSet is a sub-set of [[LOGICAL_OPT_RULES]].
+   */
   private val LOGICAL_RULES: RuleSet = RuleSets.ofList(
     // scan optimization
     PushProjectIntoTableSourceScanRule.INSTANCE,
@@ -312,8 +313,8 @@ object FlinkBatchRuleSets {
   )
 
   /**
-    * RuleSet to translate calcite nodes to flink nodes
-    */
+   * RuleSet to translate calcite nodes to flink nodes
+   */
   private val LOGICAL_CONVERTERS: RuleSet = RuleSets.ofList(
     FlinkLogicalAggregate.BATCH_CONVERTER,
     FlinkLogicalOverAggregate.CONVERTER,
@@ -335,8 +336,8 @@ object FlinkBatchRuleSets {
   )
 
   /**
-    * RuleSet to do logical optimize for batch
-    */
+   * RuleSet to do logical optimize for batch
+   */
   val LOGICAL_OPT_RULES: RuleSet = RuleSets.ofList((
     FILTER_RULES.asScala ++
       PROJECT_RULES.asScala ++
@@ -346,8 +347,8 @@ object FlinkBatchRuleSets {
     ).asJava)
 
   /**
-    * RuleSet to do rewrite on FlinkLogicalRel for batch
-    */
+   * RuleSet to do rewrite on FlinkLogicalRel for batch
+   */
   val LOGICAL_REWRITE: RuleSet = RuleSets.ofList(
     // transpose calc past snapshot
     CalcSnapshotTransposeRule.INSTANCE,
@@ -356,8 +357,8 @@ object FlinkBatchRuleSets {
   )
 
   /**
-    * RuleSet to do physical optimize for batch
-    */
+   * RuleSet to do physical optimize for batch
+   */
   val PHYSICAL_OPT_RULES: RuleSet = RuleSets.ofList(
     FlinkExpandConversionRule.BATCH_INSTANCE,
     // source
