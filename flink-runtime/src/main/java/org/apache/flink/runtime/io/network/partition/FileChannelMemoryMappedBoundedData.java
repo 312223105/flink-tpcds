@@ -91,6 +91,7 @@ final class FileChannelMemoryMappedBoundedData implements BoundedData {
 	/** The maximum size of each mapped region. */
 	private final long maxRegionSize;
 
+	// 用于接收LZ4压缩后的数据，复用对象
 	private final ByteBuffer compressBuf = ByteBuffer.allocateDirect(32*1024);
 	private final LZ4Compressor lz4Compressor = LZ4Factory.fastestInstance().fastCompressor();
 
@@ -130,6 +131,9 @@ final class FileChannelMemoryMappedBoundedData implements BoundedData {
 		// or if spaceLeft < buffer.size switch to next buffer
 
 		ByteBuffer nioBuffer = buffer.getNioBufferReadable();
+
+		// 针对不同的buffer类型，调用LZ4的不同压缩接口
+		// 现有数据，每次原始数据大小等于Segment Size，固定是32KB，压缩后没有大于32KB的，暂时没有实现自适应Segment Size
 		if(nioBuffer.isDirect()) {
 			compressBuf.clear();
 			lz4Compressor.compress(nioBuffer, compressBuf);
@@ -172,6 +176,7 @@ final class FileChannelMemoryMappedBoundedData implements BoundedData {
 				.map((bb) -> bb.duplicate().order(ByteOrder.nativeOrder()))
 				.collect(Collectors.toList());
 		LOG.debug("{} createReader: {}", ignored, memoryMappedRegions);
+		// 返回数据前需要先解压，替换为了带解压的Reader
 		return new MemoryMappedBoundedData.CompressedBufferSlicer(buffers);
 	}
 

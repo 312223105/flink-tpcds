@@ -97,6 +97,8 @@ final class BufferReaderWriterUtil {
 	}
 
 	static private final LZ4SafeDecompressor lz4Compressor = LZ4Factory.fastestInstance().safeDecompressor();
+
+	// 分块解压，不会出现压缩块不完整的情况
 	@Nullable
 	static Buffer sliceNextBufferWithUncompress(ByteBuffer memory, ByteBuffer compressBuf) {
 		final int remaining = memory.remaining();

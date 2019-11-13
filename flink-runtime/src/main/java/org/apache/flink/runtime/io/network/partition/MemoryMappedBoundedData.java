@@ -288,6 +288,8 @@ final class MemoryMappedBoundedData implements BoundedData {
 			assert currentData != null;
 			lastAvailableBuf = bufs.poll();
 			lastAvailableBuf.clear();
+
+			//
 			final Buffer next = BufferReaderWriterUtil.sliceNextBufferWithUncompress(currentData, lastAvailableBuf);
 			bufs.add(lastAvailableBuf);
 			if (next != null) {
