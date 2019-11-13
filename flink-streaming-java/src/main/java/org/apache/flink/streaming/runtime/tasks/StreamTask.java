@@ -362,7 +362,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
 			}
 
 			// -------- Invoke --------
-			LOG.info("Invoking {} operatorChain: {} ", getName(), operatorChain);
+			LOG.debug("Invoking {} operatorChain: {} ", getName(), operatorChain);
 
 			// open mailbox
 			mailboxProcessor.open();

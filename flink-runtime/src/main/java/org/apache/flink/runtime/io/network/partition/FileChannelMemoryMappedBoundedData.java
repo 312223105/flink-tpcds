@@ -171,7 +171,7 @@ final class FileChannelMemoryMappedBoundedData implements BoundedData {
 		final List<ByteBuffer> buffers = memoryMappedRegions.stream()
 				.map((bb) -> bb.duplicate().order(ByteOrder.nativeOrder()))
 				.collect(Collectors.toList());
-		LOG.info("{} createReader: {}", ignored, memoryMappedRegions);
+		LOG.debug("{} createReader: {}", ignored, memoryMappedRegions);
 		return new MemoryMappedBoundedData.CompressedBufferSlicer(buffers);
 	}
 

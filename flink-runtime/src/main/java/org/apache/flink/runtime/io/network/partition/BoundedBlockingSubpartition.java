@@ -62,7 +62,6 @@ import static org.apache.flink.util.Preconditions.checkState;
  * thread-safe vis-a-vis each other.
  */
 final class BoundedBlockingSubpartition extends ResultSubpartition {
-	private static final Logger LOG = LoggerFactory.getLogger(BoundedBlockingSubpartition.class);
 	/** This lock guards the creation of readers and disposal of the memory mapped file. */
 	private final Object lock = new Object();
 
@@ -136,10 +135,6 @@ final class BoundedBlockingSubpartition extends ResultSubpartition {
 		}
 		catch (IOException e) {
 			throw new FlinkRuntimeException(e.getMessage(), e);
-		}
-		if(data instanceof  FileChannelMemoryMappedBoundedData) {
-			FileChannelMemoryMappedBoundedData fileChannelData = (FileChannelMemoryMappedBoundedData) data;
-			LOG.info("flush BoundedBlockingSubpartition(index:{}) file: {} task: {}", index, fileChannelData, parent.getOwningTaskName());
 		}
 	}
 

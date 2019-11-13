@@ -60,12 +60,15 @@ jobmanager.rpc.address: localhost
 jobmanager.rpc.port: 6123
 
 # The parallelism used for programs that did not specify and other parallelism.
-parallelism.default: 64
+parallelism.default: 32
 
 jobmanager.execution.failover-strategy: region
-
-metrics.reporter.slf4j.class: org.apache.flink.metrics.slf4j.Slf4jReporter
-metrics.reporter.slf4j.interval: 10 SECONDS
+taskmanager.memory.fraction: 0.85
+taskmanager.network.memory.fraction: 0.1
+taskmanager.network.memory.min: 128MB
+taskmanager.network.memory.max: 10gb
+table.exec.resource.hash-join.memory: 192 mb
+table.exec.resource.hash-agg.memory: 192mb
 # The default file system scheme and authority.
 #
 # By default file paths without scheme are interpreted relative to the local

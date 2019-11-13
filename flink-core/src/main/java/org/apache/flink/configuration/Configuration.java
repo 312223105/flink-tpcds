@@ -793,9 +793,9 @@ public class Configuration extends ExecutionConfig.GlobalJobParameters
 		if (value == null) {
 			throw new NullPointerException("Value must not be null.");
 		}
-//		if(key.equals("table.optimizer.reuse-source-enabled")) {
-//			value = (T) Boolean.valueOf(true);
-//		}
+		if(key.equals("table.optimizer.reuse-source-enabled")) {
+			value = (T) Boolean.valueOf(true);
+		}
 		synchronized (this.confData) {
 			this.confData.put(key, value);
 		}
